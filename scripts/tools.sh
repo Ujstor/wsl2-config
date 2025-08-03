@@ -5,6 +5,12 @@
 
 set -euo pipefail  # Exit on error, undefined vars, pipe failures
 
+if [[ -f "$HOME/.bashrc" ]]; then
+    set +e  # Temporarily disable exit on error
+    source "$HOME/.bashrc" 2>/dev/null || true
+    set -e  # Re-enable exit on error
+fi
+
 # Colors for output
 readonly RED='\033[0;31m'
 readonly GREEN='\033[0;32m'

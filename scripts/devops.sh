@@ -5,6 +5,12 @@
 
 set -e
 
+if [[ -f "$HOME/.bashrc" ]]; then
+    set +e  # Temporarily disable exit on error
+    source "$HOME/.bashrc" 2>/dev/null || true
+    set -e  # Re-enable exit on error
+fi
+
 # Configuration
 readonly DOWNLOAD_DIR="$HOME/Downloads"
 readonly GO_VERSION="go1.24.5"

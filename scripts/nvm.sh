@@ -1,5 +1,11 @@
 #!/bin/bash
 
+if [[ -f "$HOME/.bashrc" ]]; then
+    set +e  # Temporarily disable exit on error
+    source "$HOME/.bashrc" 2>/dev/null || true
+    set -e  # Re-enable exit on error
+fi
+
 # Colors for output
 RED='\033[0;31m'
 GREEN='\033[0;32m'
