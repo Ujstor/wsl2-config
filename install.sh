@@ -14,7 +14,7 @@ sudo apt upgrade -y
 
 sudo chown -R $username:$username /home/$username
 
-# Installing Essential Programs 
+# Installing Essential Programs
 sudo apt install nala unzip wget build-essential -y
 
 curl -sSL https://raw.githubusercontent.com/Ujstor/wsl2-config/main/scripts/usenala.sh | sudo bash
@@ -48,7 +48,5 @@ curl -sSL https://raw.githubusercontent.com/Ujstor/nvim-config/master/install.sh
 
 curl -sSL https://raw.githubusercontent.com/Ujstor/wsl2-config/main/scripts/nvm.sh | bash
 curl -sSL https://raw.githubusercontent.com/Ujstor/wsl2-config/main/scripts/tools.sh | bash
-
-pip install ansible
 
 echo "Setup completed for user: $username"

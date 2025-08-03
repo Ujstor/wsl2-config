@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Enhanced System Setup Script
-# Installs Brave Browser, GitHub CLI, and Go tools with proper error handling
+# Installs Brave Browser, GitHub CLI, Go tools, Python packages, and npm packages with proper error handling
 
 set -euo pipefail  # Exit on error, undefined vars, pipe failures
 
@@ -62,7 +62,7 @@ update_system() {
 # Install base dependencies
 install_base_deps() {
     log_info "Installing base dependencies..."
-    local deps="software-properties-common apt-transport-https curl ca-certificates"
+    local deps="software-properties-common apt-transport-https curl ca-certificates python3-pip nodejs npm"
 
     if ! sudo nala install $deps -y; then
         error_exit "Failed to install base dependencies"
@@ -168,6 +168,111 @@ install_go_tools() {
     done
 }
 
+# Check and validate Python/pip installation
+check_python() {
+    log_info "Checking Python and pip installation..."
+
+    if ! command -v python3 &> /dev/null; then
+        log_error "Python3 is not installed"
+        return 1
+    fi
+
+    if ! command -v pip3 &> /dev/null; then
+        log_error "pip3 is not installed"
+        return 1
+    fi
+
+    local python_version
+    python_version=$(python3 --version 2>/dev/null || echo "unknown")
+    local pip_version
+    pip_version=$(pip3 --version 2>/dev/null || echo "unknown")
+
+    log_success "Python is installed: $python_version"
+    log_success "pip is installed: $pip_version"
+    return 0
+}
+
+# Install Python packages with pip
+install_pip_packages() {
+    log_info "Installing Python packages with pip..."
+
+    local packages=(
+        "ansible"
+    )
+
+    for package in "${packages[@]}"; do
+        log_info "Installing $package..."
+        if ! pip3 install --user "$package"; then
+            log_error "Failed to install $package"
+            continue
+        fi
+        log_success "$package installed"
+    done
+
+    # Ensure user's local bin is in PATH
+    local user_bin="$HOME/.local/bin"
+    if [[ ":$PATH:" != *":$user_bin:"* ]]; then
+        log_warning "Adding $user_bin to PATH for current session"
+        export PATH="$user_bin:$PATH"
+
+        # Add to bashrc for future sessions
+        if ! grep -q "$user_bin" "$HOME/.bashrc"; then
+            echo "export PATH=\"$user_bin:\$PATH\"" >> "$HOME/.bashrc"
+            log_info "Added $user_bin to ~/.bashrc for future sessions"
+        fi
+    fi
+}
+
+# Check and validate Node.js/npm installation
+check_nodejs() {
+    log_info "Checking Node.js and npm installation..."
+
+    if ! command -v node &> /dev/null; then
+        log_error "Node.js is not installed"
+        return 1
+    fi
+
+    if ! command -v npm &> /dev/null; then
+        log_error "npm is not installed"
+        return 1
+    fi
+
+    local node_version
+    node_version=$(node --version 2>/dev/null || echo "unknown")
+    local npm_version
+    npm_version=$(npm --version 2>/dev/null || echo "unknown")
+
+    log_success "Node.js is installed: $node_version"
+    log_success "npm is installed: $npm_version"
+    return 0
+}
+
+# Install npm packages globally
+install_npm_packages() {
+    log_info "Installing npm packages globally..."
+
+    local packages=(
+        "@anthropic-ai/claude-code"
+    )
+
+    for package in "${packages[@]}"; do
+        log_info "Installing $package..."
+        if ! npm install -g "$package"; then
+            log_error "Failed to install $package"
+            continue
+        fi
+        log_success "$package installed"
+    done
+
+    # Check if global npm bin is in PATH
+    local npm_bin
+    npm_bin=$(npm bin -g 2>/dev/null)
+    if [[ -n "$npm_bin" ]] && [[ ":$PATH:" != *":$npm_bin:"* ]]; then
+        log_warning "Global npm bin directory ($npm_bin) is not in PATH"
+        log_info "You may need to add it to your PATH in ~/.bashrc"
+    fi
+}
+
 # Display summary
 show_summary() {
     log_info "Installation Summary:"
@@ -177,18 +282,46 @@ show_summary() {
     command -v brave-browser &> /dev/null && echo -e "${GREEN}✓${NC} Brave Browser" || echo -e "${RED}✗${NC} Brave Browser"
     command -v gh &> /dev/null && echo -e "${GREEN}✓${NC} GitHub CLI" || echo -e "${RED}✗${NC} GitHub CLI"
     command -v go &> /dev/null && echo -e "${GREEN}✓${NC} Go" || echo -e "${RED}✗${NC} Go"
+    command -v python3 &> /dev/null && echo -e "${GREEN}✓${NC} Python3" || echo -e "${RED}✗${NC} Python3"
+    command -v pip3 &> /dev/null && echo -e "${GREEN}✓${NC} pip3" || echo -e "${RED}✗${NC} pip3"
+    command -v node &> /dev/null && echo -e "${GREEN}✓${NC} Node.js" || echo -e "${RED}✗${NC} Node.js"
+    command -v npm &> /dev/null && echo -e "${GREEN}✓${NC} npm" || echo -e "${RED}✗${NC} npm"
 
     # Check Go tools (only if Go is available)
     if command -v go &> /dev/null; then
         local go_bin_path="$(go env GOPATH 2>/dev/null)/bin"
         [[ -f "$go_bin_path/hcloud" ]] && echo -e "${GREEN}✓${NC} Hetzner Cloud CLI" || echo -e "${RED}✗${NC} Hetzner Cloud CLI"
         [[ -f "$go_bin_path/go-blueprint" ]] && echo -e "${GREEN}✓${NC} Go Blueprint" || echo -e "${RED}✗${NC} Go Blueprint"
+        [[ -f "$go_bin_path/gdu" ]] && echo -e "${GREEN}✓${NC} GDU (disk usage analyzer)" || echo -e "${RED}✗${NC} GDU (disk usage analyzer)"
     else
         echo -e "${RED}✗${NC} Hetzner Cloud CLI (Go not available)"
         echo -e "${RED}✗${NC} Go Blueprint (Go not available)"
+        echo -e "${RED}✗${NC} GDU (Go not available)"
+    fi
+
+    # Check Python packages
+    if command -v ansible &> /dev/null || [[ -f "$HOME/.local/bin/ansible" ]]; then
+        echo -e "${GREEN}✓${NC} Ansible"
+    else
+        echo -e "${RED}✗${NC} Ansible"
+    fi
+
+    # Check npm packages
+    if command -v claude-code &> /dev/null || npm list -g @anthropic-ai/claude-code &> /dev/null; then
+        echo -e "${GREEN}✓${NC} Claude Code CLI"
+    else
+        echo -e "${RED}✗${NC} Claude Code CLI"
     fi
 
     echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+
+    # Additional notes
+    log_info "Additional Notes:"
+    echo "• Python packages are installed in user space (~/.local/bin)"
+    echo "• npm packages are installed globally (may require sudo)"
+    echo "• You may need to restart your terminal or source ~/.bashrc for PATH changes"
+    echo "• Run 'claude-code --help' to get started with Claude Code CLI"
+    echo "• Run 'ansible --version' to verify Ansible installation"
 }
 
 # Main execution
@@ -207,6 +340,18 @@ main() {
         install_go_tools
     else
         log_warning "Skipping Go tools installation due to missing Go"
+    fi
+
+    if check_python; then
+        install_pip_packages
+    else
+        log_warning "Skipping pip packages installation due to missing Python/pip"
+    fi
+
+    if check_nodejs; then
+        install_npm_packages
+    else
+        log_warning "Skipping npm packages installation due to missing Node.js/npm"
     fi
 
     show_summary
