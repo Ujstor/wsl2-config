@@ -15,9 +15,9 @@ sudo apt upgrade -y
 sudo chown -R $username:$username /home/$username
 
 # Installing Essential Programs 
-sudo nala install nala unzip wget build-essential -y
+sudo apt install nala unzip wget build-essential -y
 
-curl -sSL https://raw.githubusercontent.com/Ujstor/wsl2-config/main/scripts/usenala.sh | bash
+curl -sSL https://raw.githubusercontent.com/Ujstor/wsl2-config/main/scripts/usenala.sh | sudo bash
 
 # Installing Other less important Programs
 sudo nala install psmisc vim gdu htop tldr git trash-cli autojump curl fzf bat python3-pip -y
