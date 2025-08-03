@@ -62,7 +62,7 @@ update_system() {
 # Install base dependencies
 install_base_deps() {
     log_info "Installing base dependencies..."
-    local deps="software-properties-common apt-transport-https curl ca-certificates python3-pip nodejs npm"
+    local deps="software-properties-common apt-transport-https curl ca-certificates"
 
     if ! sudo nala install $deps -y; then
         error_exit "Failed to install base dependencies"
