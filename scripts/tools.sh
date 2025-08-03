@@ -130,30 +130,15 @@ install_github_cli() {
 check_go() {
     log_info "Checking Go installation..."
 
-    if ! command -v go &> /dev/null; then
+    if command -v go &> /dev/null; then
+        log_success "Go is installed"
+        return 0
+    else
         log_error "Go is not installed."
         log_info "Please install Go from: https://golang.org/doc/install"
         log_info "Or use your package manager: sudo nala install golang-go"
         return 1
     fi
-
-    local go_version
-    go_version=$(go version 2>/dev/null | awk '{print $3}' | sed 's/go//')
-    log_success "Go $go_version is installed"
-
-    # Check if GOPATH is set (optional but recommended)
-    if [[ -z "${GOPATH:-}" ]]; then
-        log_warning "GOPATH is not set. Consider adding 'export GOPATH=\$HOME/go' to your shell profile."
-    fi
-
-    # Ensure Go bin directory is in PATH
-    local go_bin_path="$(go env GOPATH)/bin"
-    if [[ ":$PATH:" != *":$go_bin_path:"* ]]; then
-        log_warning "Go bin directory ($go_bin_path) is not in PATH."
-        log_info "Consider adding 'export PATH=\$PATH:\$(go env GOPATH)/bin' to your shell profile."
-    fi
-
-    return 0
 }
 
 # Install Go tools

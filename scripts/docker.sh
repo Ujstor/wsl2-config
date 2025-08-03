@@ -22,7 +22,7 @@ else
 fi
 
 echo "📦 Updating package lists..."
-sudo nala update -qq
+sudo nala update
 
 echo "🔧 Installing prerequisites..."
 sudo nala install -y ca-certificates curl gnupg
@@ -50,7 +50,7 @@ fi
 echo "📚 Adding Docker repository..."
 echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/$DOCKER_REPO $CODENAME stable" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
 
-sudo nala update -qq
+sudo nala update
 echo "🐳 Installing Docker packages..."
 sudo nala install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
 

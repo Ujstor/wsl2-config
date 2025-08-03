@@ -7,7 +7,7 @@ set -e
 
 # Configuration
 readonly DOWNLOAD_DIR="$HOME/Downloads"
-readonly GO_VERSION="go1.24.0"
+readonly GO_VERSION="go1.24.5"
 readonly GO_URL="https://golang.org/dl/${GO_VERSION}.linux-amd64.tar.gz"
 
 # Colors for output

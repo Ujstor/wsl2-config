@@ -31,6 +31,7 @@ for python_dir in /usr/lib/python3.*/; do
 done
 
 curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
+/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
 
 curl -sSL https://raw.githubusercontent.com/Ujstor/wsl2-config/main/scripts/devops.sh | bash
 curl -sSL https://raw.githubusercontent.com/Ujstor/wsl2-config/main/scripts/docker.sh | bash
