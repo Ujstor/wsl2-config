@@ -151,6 +151,7 @@ install_go_tools() {
 
     local tools=(
         "github.com/hetznercloud/cli/cmd/hcloud@latest"
+        "github.com/dundee/gdu@latest"
         "github.com/melkeydev/go-blueprint@latest"
     )
 

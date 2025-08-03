@@ -20,7 +20,7 @@ sudo apt install nala unzip wget build-essential -y
 curl -sSL https://raw.githubusercontent.com/Ujstor/wsl2-config/main/scripts/usenala.sh | sudo bash
 
 # Installing Other less important Programs
-sudo apt install psmisc vim gdu htop tldr git trash-cli autojump curl fzf bat python3-pip -y
+sudo apt install psmisc vim htop tldr git trash-cli autojump curl fzf bat ripgrep fd-find python3-pip -y
 
 # Handle EXTERNALLY-MANAGED for any Python 3.x version
 for python_dir in /usr/lib/python3.*/; do
@@ -30,25 +30,24 @@ for python_dir in /usr/lib/python3.*/; do
     fi
 done
 
+curl -sSL https://raw.githubusercontent.com/Ujstor/mybash/main/setup.sh | bash
+source ~/.bashrc
+
 curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
+
 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
 
 curl -sSL https://raw.githubusercontent.com/Ujstor/wsl2-config/main/scripts/devops.sh | bash
 curl -sSL https://raw.githubusercontent.com/Ujstor/wsl2-config/main/scripts/docker.sh | bash
 
-curl -sSL https://raw.githubusercontent.com/Ujstor/wsl2-config/main/scripts/nvm.sh | bash
-
-pip install ansible
-
 curl -sSL https://raw.githubusercontent.com/Ujstor/wsl2-config/main/scripts/x11.sh | bash
 
-# Install configs for current user
-curl -sSL https://raw.githubusercontent.com/Ujstor/mybash/main/setup.sh | bash
 curl -sSL https://raw.githubusercontent.com/Ujstor/tmux-config/master/install.sh | bash
 curl -sSL https://raw.githubusercontent.com/Ujstor/nvim-config/master/install.sh | bash
 
-source ~/.bashrc
 
+curl -sSL https://raw.githubusercontent.com/Ujstor/wsl2-config/main/scripts/nvm.sh | bash
 curl -sSL https://raw.githubusercontent.com/Ujstor/wsl2-config/main/scripts/tools.sh | bash
+pip install ansible
 
 echo "Setup completed for user: $username"
