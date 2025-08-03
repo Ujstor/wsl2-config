@@ -257,11 +257,24 @@ install_npm_packages() {
 
     for package in "${packages[@]}"; do
         log_info "Installing $package..."
-        if ! npm install -g "$package"; then
-            log_error "Failed to install $package"
+
+        # Try global install first
+        if npm install -g "$package" 2>/dev/null; then
+            log_success "$package installed globally"
             continue
         fi
-        log_success "$package installed"
+
+        # If global install fails, try with sudo
+        log_warning "Global install failed due to permissions, trying with sudo..."
+        if sudo npm install -g "$package"; then
+            log_success "$package installed globally with sudo"
+            continue
+        fi
+
+        # If both fail, suggest alternative
+        log_error "Failed to install $package globally"
+        log_info "Alternative: You can install it locally with 'npx $package' or fix npm permissions"
+        log_info "To fix npm permissions, run: sudo chown -R \$(whoami) /usr/local/lib/node_modules"
     done
 
     # Check if global npm bin is in PATH
