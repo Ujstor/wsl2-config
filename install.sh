@@ -20,7 +20,7 @@ sudo apt install nala unzip wget build-essential -y
 curl -sSL https://raw.githubusercontent.com/Ujstor/wsl2-config/main/scripts/usenala.sh | sudo bash
 
 # Installing Other less important Programs
-sudo apt install psmisc vim htop tldr git trash-cli autojump curl fzf bat ripgrep fd-find python3-pip -y
+sudo apt install psmisc vim htop tldr git trash-cli autojump curl fzf bat ripgrep fd-find lynx python3-pip -y
 
 # Handle EXTERNALLY-MANAGED for any Python 3.x version
 for python_dir in /usr/lib/python3.*/; do
@@ -48,6 +48,7 @@ curl -sSL https://raw.githubusercontent.com/Ujstor/nvim-config/master/install.sh
 
 curl -sSL https://raw.githubusercontent.com/Ujstor/wsl2-config/main/scripts/nvm.sh | bash
 curl -sSL https://raw.githubusercontent.com/Ujstor/wsl2-config/main/scripts/tools.sh | bash
+
 pip install ansible
 
 echo "Setup completed for user: $username"
