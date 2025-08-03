@@ -20,7 +20,7 @@ sudo apt install nala unzip wget build-essential -y
 curl -sSL https://raw.githubusercontent.com/Ujstor/wsl2-config/main/scripts/usenala.sh | sudo bash
 
 # Installing Other less important Programs
-sudo nala install psmisc vim gdu htop tldr git trash-cli autojump curl fzf bat python3-pip -y
+sudo apt install psmisc vim gdu htop tldr git trash-cli autojump curl fzf bat python3-pip -y
 
 # Handle EXTERNALLY-MANAGED for any Python 3.x version
 for python_dir in /usr/lib/python3.*/; do

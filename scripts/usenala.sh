@@ -28,14 +28,14 @@ EOF
 fi
 
 if [ ! -f "$rusenala" ]; then
-cat << \EOF > "$rusenala"
+sudo bash -c "cat << \\EOF > \"$rusenala\"
 apt() {
-  command nala "$@"
+  command nala \"\\\$@\"
 }
-EOF
-cat << EOF >> "$rbashrc"
-if [ -f "$rusenala" ]; then
-        . "$rusenala"
+EOF"
+sudo bash -c "cat << EOF >> \"$rbashrc\"
+if [ -f \"$rusenala\" ]; then
+        . \"$rusenala\"
 fi
-EOF
+EOF"
 fi
