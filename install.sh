@@ -41,11 +41,14 @@ curl -sSL https://raw.githubusercontent.com/Ujstor/wsl2-config/main/scripts/nvm.
 pip install ansible
 
 curl -sSL https://raw.githubusercontent.com/Ujstor/wsl2-config/main/scripts/x11.sh | bash
-curl -sSL https://raw.githubusercontent.com/Ujstor/wsl2-config/main/scripts/tools.sh | bash
 
 # Install configs for current user
 curl -sSL https://raw.githubusercontent.com/Ujstor/mybash/main/setup.sh | bash
 curl -sSL https://raw.githubusercontent.com/Ujstor/tmux-config/master/install.sh | bash
 curl -sSL https://raw.githubusercontent.com/Ujstor/nvim-config/master/install.sh | bash
+
+source ~/.bashrc
+
+curl -sSL https://raw.githubusercontent.com/Ujstor/wsl2-config/main/scripts/tools.sh | bash
 
 echo "Setup completed for user: $username"

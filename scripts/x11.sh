@@ -51,9 +51,7 @@ sudo nala install -y \
 echo "Installing OpenGL/Mesa libraries..."
 sudo nala install -y \
     libgl1-mesa-dev \
-    libgl1-mesa-glx \
     libglu1-mesa-dev \
-    libegl1-mesa \
     libgles2-mesa-dev
 
 # FontConfig libraries (for font handling)
