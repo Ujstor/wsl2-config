@@ -1,8 +1,7 @@
 #!/bin/bash
 
 # Enhanced System Setup Script
-# Installs Brave Browser, GitHub CLI, Go tools, Python packages, and npm packages with proper error handling
-
+# Installs Brave Browser, GitHub CLI, Go tools, Python packages, npm packages, and Rust tools with proper error handling
 set -euo pipefail  # Exit on error, undefined vars, pipe failures
 
 if [[ -f "$HOME/.bashrc" ]]; then
@@ -68,8 +67,7 @@ update_system() {
 # Install base dependencies
 install_base_deps() {
     log_info "Installing base dependencies..."
-    local deps="software-properties-common apt-transport-https curl ca-certificates"
-
+    local deps="software-properties-common apt-transport-https curl ca-certificates build-essential"
     if ! sudo nala install $deps -y; then
         error_exit "Failed to install base dependencies"
     fi
@@ -79,7 +77,6 @@ install_base_deps() {
 # Install Brave Browser
 install_brave() {
     log_info "Installing Brave Browser..."
-
     # Download and add GPG key
     if ! wget -qO- https://brave-browser-apt-release.s3.brave.com/brave-browser-archive-keyring.gpg | \
          sudo gpg --dearmor | \
@@ -97,14 +94,12 @@ install_brave() {
     if ! sudo nala update || ! sudo nala install brave-browser -y; then
         error_exit "Failed to install Brave Browser"
     fi
-
     log_success "Brave Browser installed"
 }
 
 # Install GitHub CLI
 install_github_cli() {
     log_info "Installing GitHub CLI..."
-
     # Ensure curl is available
     if ! command -v curl &> /dev/null; then
         log_info "Installing curl..."
@@ -128,14 +123,91 @@ install_github_cli() {
     if ! sudo nala update || ! sudo nala install gh -y; then
         error_exit "Failed to install GitHub CLI"
     fi
-
     log_success "GitHub CLI installed"
+}
+
+# Check and validate Rust installation
+check_rust() {
+    log_info "Checking Rust installation..."
+    # Source cargo environment if it exists
+    if [[ -f "$HOME/.cargo/env" ]]; then
+        source "$HOME/.cargo/env"
+    fi
+
+    # Check if cargo is available in PATH for current user
+    if command -v cargo &> /dev/null; then
+        local rust_version
+        rust_version=$(rustc --version 2>/dev/null || echo "unknown")
+        local cargo_version
+        cargo_version=$(cargo --version 2>/dev/null || echo "unknown")
+        log_success "Rust is installed: $rust_version"
+        log_success "Cargo is installed: $cargo_version"
+        return 0
+    else
+        log_error "Rust/Cargo is not installed or not in PATH for user $USER."
+        return 1
+    fi
+}
+
+# Install Rust using rustup
+install_rust() {
+    log_info "Installing Rust using rustup..."
+
+    # Download and run rustup installer
+    if ! curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y; then
+        error_exit "Failed to install Rust"
+    fi
+
+    # Source cargo environment
+    if [[ -f "$HOME/.cargo/env" ]]; then
+        source "$HOME/.cargo/env"
+    fi
+
+    # Add to bashrc if not already present
+    local cargo_env_line='source "$HOME/.cargo/env"'
+    if ! grep -Fxq "$cargo_env_line" "$HOME/.bashrc" 2>/dev/null; then
+        echo "" >> "$HOME/.bashrc"
+        echo "# Rust/Cargo environment" >> "$HOME/.bashrc"
+        echo "$cargo_env_line" >> "$HOME/.bashrc"
+        log_info "Added Cargo environment to ~/.bashrc"
+    fi
+
+    log_success "Rust installed successfully"
+}
+
+# Install Rust packages with cargo
+install_cargo_packages() {
+    log_info "Installing Rust packages with cargo..."
+
+    # Ensure cargo is available
+    if [[ -f "$HOME/.cargo/env" ]]; then
+        source "$HOME/.cargo/env"
+    fi
+
+    local packages=(
+        "eza"
+    )
+
+    for package in "${packages[@]}"; do
+        log_info "Installing $package..."
+        if ! cargo install "$package"; then
+            log_error "Failed to install $package"
+            continue
+        fi
+        log_success "$package installed"
+    done
+
+    # Ensure cargo bin is in PATH
+    local cargo_bin="$HOME/.cargo/bin"
+    if [[ ":$PATH:" != *":$cargo_bin:"* ]]; then
+        log_warning "Adding $cargo_bin to PATH for current session"
+        export PATH="$cargo_bin:$PATH"
+    fi
 }
 
 # Check and validate Go installation
 check_go() {
     log_info "Checking Go installation..."
-
     # Check if go is available in PATH for current user
     if command -v go &> /dev/null; then
         local go_version
@@ -154,7 +226,6 @@ check_go() {
 # Install Go tools
 install_go_tools() {
     log_info "Installing Go tools..."
-
     local tools=(
         "github.com/hetznercloud/cli/cmd/hcloud@latest"
         "github.com/dundee/gdu@latest"
@@ -164,7 +235,6 @@ install_go_tools() {
     for tool in "${tools[@]}"; do
         local tool_name
         tool_name=$(basename "$(echo "$tool" | cut -d'@' -f1)")
-
         log_info "Installing $tool_name..."
         if ! go install "$tool"; then
             log_error "Failed to install $tool_name"
@@ -177,7 +247,6 @@ install_go_tools() {
 # Check and validate Python/pip installation
 check_python() {
     log_info "Checking Python and pip installation..."
-
     if ! command -v python3 &> /dev/null; then
         log_error "Python3 is not installed"
         return 1
@@ -192,7 +261,6 @@ check_python() {
     python_version=$(python3 --version 2>/dev/null || echo "unknown")
     local pip_version
     pip_version=$(pip3 --version 2>/dev/null || echo "unknown")
-
     log_success "Python is installed: $python_version"
     log_success "pip is installed: $pip_version"
     return 0
@@ -201,7 +269,6 @@ check_python() {
 # Install Python packages with pip
 install_pip_packages() {
     log_info "Installing Python packages with pip..."
-
     local packages=(
         "ansible"
     )
@@ -220,7 +287,6 @@ install_pip_packages() {
     if [[ ":$PATH:" != *":$user_bin:"* ]]; then
         log_warning "Adding $user_bin to PATH for current session"
         export PATH="$user_bin:$PATH"
-
         # Add to bashrc for future sessions
         if ! grep -q "$user_bin" "$HOME/.bashrc"; then
             echo "export PATH=\"$user_bin:\$PATH\"" >> "$HOME/.bashrc"
@@ -232,7 +298,6 @@ install_pip_packages() {
 # Check and validate Node.js/npm installation
 check_nodejs() {
     log_info "Checking Node.js and npm installation..."
-
     if ! command -v node &> /dev/null; then
         log_error "Node.js is not installed"
         return 1
@@ -247,7 +312,6 @@ check_nodejs() {
     node_version=$(node --version 2>/dev/null || echo "unknown")
     local npm_version
     npm_version=$(npm --version 2>/dev/null || echo "unknown")
-
     log_success "Node.js is installed: $node_version"
     log_success "npm is installed: $npm_version"
     return 0
@@ -256,14 +320,12 @@ check_nodejs() {
 # Install npm packages globally
 install_npm_packages() {
     log_info "Installing npm packages globally..."
-
     local packages=(
         "@anthropic-ai/claude-code"
     )
 
     for package in "${packages[@]}"; do
         log_info "Installing $package..."
-
         # Try global install first
         if npm install -g "$package" 2>/dev/null; then
             log_success "$package installed globally"
@@ -300,11 +362,25 @@ show_summary() {
     # Check installed software
     command -v brave-browser &> /dev/null && echo -e "${GREEN}✓${NC} Brave Browser" || echo -e "${RED}✗${NC} Brave Browser"
     command -v gh &> /dev/null && echo -e "${GREEN}✓${NC} GitHub CLI" || echo -e "${RED}✗${NC} GitHub CLI"
+
+    # Check Rust/Cargo
+    if [[ -f "$HOME/.cargo/env" ]]; then
+        source "$HOME/.cargo/env"
+    fi
+    command -v cargo &> /dev/null && echo -e "${GREEN}✓${NC} Rust/Cargo" || echo -e "${RED}✗${NC} Rust/Cargo"
     command -v go &> /dev/null && echo -e "${GREEN}✓${NC} Go" || echo -e "${RED}✗${NC} Go"
     command -v python3 &> /dev/null && echo -e "${GREEN}✓${NC} Python3" || echo -e "${RED}✗${NC} Python3"
     command -v pip3 &> /dev/null && echo -e "${GREEN}✓${NC} pip3" || echo -e "${RED}✗${NC} pip3"
     command -v node &> /dev/null && echo -e "${GREEN}✓${NC} Node.js" || echo -e "${RED}✗${NC} Node.js"
     command -v npm &> /dev/null && echo -e "${GREEN}✓${NC} npm" || echo -e "${RED}✗${NC} npm"
+
+    # Check Rust packages (only if Cargo is available)
+    if command -v cargo &> /dev/null; then
+        local cargo_bin_path="$HOME/.cargo/bin"
+        [[ -f "$cargo_bin_path/eza" ]] && echo -e "${GREEN}✓${NC} eza (modern ls replacement)" || echo -e "${RED}✗${NC} eza"
+    else
+        echo -e "${RED}✗${NC} eza (Cargo not available)"
+    fi
 
     # Check Go tools (only if Go is available)
     if command -v go &> /dev/null; then
@@ -333,27 +409,30 @@ show_summary() {
     fi
 
     echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-
-    # Additional notes
-    log_info "Additional Notes:"
-    echo "• Python packages are installed in user space (~/.local/bin)"
-    echo "• npm packages are installed globally (may require sudo)"
-    echo "• You may need to restart your terminal or source ~/.bashrc for PATH changes"
-    echo "• Run 'claude-code --help' to get started with Claude Code CLI"
-    echo "• Run 'ansible --version' to verify Ansible installation"
 }
 
 # Main execution
 main() {
     log_info "Starting system setup..."
-
     check_root
     check_sudo
-
     update_system
     install_base_deps
     install_brave
     install_github_cli
+
+    # Handle Rust installation
+    if ! check_rust; then
+        log_info "Installing Rust..."
+        install_rust
+        if check_rust; then
+            install_cargo_packages
+        else
+            log_warning "Skipping Rust packages installation due to Rust installation failure"
+        fi
+    else
+        install_cargo_packages
+    fi
 
     if check_go; then
         install_go_tools
@@ -375,6 +454,7 @@ main() {
 
     show_summary
     log_success "Setup completed!"
+    log_info "Please restart your terminal or run 'source ~/.bashrc' to ensure all PATH changes take effect."
 }
 
 # Run main function
