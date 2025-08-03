@@ -130,13 +130,17 @@ install_github_cli() {
 check_go() {
     log_info "Checking Go installation..."
 
+    # Check if go is available in PATH for current user
     if command -v go &> /dev/null; then
-        log_success "Go is installed"
+        local go_version
+        go_version=$(go version 2>/dev/null || echo "unknown")
+        log_success "Go is installed: $go_version"
         return 0
     else
-        log_error "Go is not installed."
+        log_error "Go is not installed or not in PATH for user $USER."
         log_info "Please install Go from: https://golang.org/doc/install"
         log_info "Or use your package manager: sudo nala install golang-go"
+        log_info "Make sure to add Go to your PATH in ~/.bashrc or ~/.profile"
         return 1
     fi
 }
@@ -173,10 +177,15 @@ show_summary() {
     command -v gh &> /dev/null && echo -e "${GREEN}✓${NC} GitHub CLI" || echo -e "${RED}✗${NC} GitHub CLI"
     command -v go &> /dev/null && echo -e "${GREEN}✓${NC} Go" || echo -e "${RED}✗${NC} Go"
 
-    # Check Go tools
-    local go_bin_path="$(go env GOPATH 2>/dev/null)/bin"
-    [[ -f "$go_bin_path/hcloud" ]] && echo -e "${GREEN}✓${NC} Hetzner Cloud CLI" || echo -e "${RED}✗${NC} Hetzner Cloud CLI"
-    [[ -f "$go_bin_path/go-blueprint" ]] && echo -e "${GREEN}✓${NC} Go Blueprint" || echo -e "${RED}✗${NC} Go Blueprint"
+    # Check Go tools (only if Go is available)
+    if command -v go &> /dev/null; then
+        local go_bin_path="$(go env GOPATH 2>/dev/null)/bin"
+        [[ -f "$go_bin_path/hcloud" ]] && echo -e "${GREEN}✓${NC} Hetzner Cloud CLI" || echo -e "${RED}✗${NC} Hetzner Cloud CLI"
+        [[ -f "$go_bin_path/go-blueprint" ]] && echo -e "${GREEN}✓${NC} Go Blueprint" || echo -e "${RED}✗${NC} Go Blueprint"
+    else
+        echo -e "${RED}✗${NC} Hetzner Cloud CLI (Go not available)"
+        echo -e "${RED}✗${NC} Go Blueprint (Go not available)"
+    fi
 
     echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 }
