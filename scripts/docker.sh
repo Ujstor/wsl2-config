@@ -22,10 +22,10 @@ else
 fi
 
 echo "📦 Updating package lists..."
-sudo apt update -qq
+sudo nala update -qq
 
 echo "🔧 Installing prerequisites..."
-sudo apt install -y ca-certificates curl gnupg
+sudo nala install -y ca-certificates curl gnupg
 
 echo "🔑 Adding Docker GPG key..."
 sudo install -m 0755 -d /etc/apt/keyrings
@@ -50,9 +50,9 @@ fi
 echo "📚 Adding Docker repository..."
 echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/$DOCKER_REPO $CODENAME stable" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
 
-sudo apt update -qq
+sudo nala update -qq
 echo "🐳 Installing Docker packages..."
-sudo apt install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
+sudo nala install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
 
 echo "👤 Adding user to docker group..."
 sudo usermod -aG docker $USER

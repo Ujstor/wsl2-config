@@ -10,11 +10,11 @@ echo "Installing X11 dependencies for GUI applications..."
 
 # Update package list
 echo "Updating package list..."
-sudo apt update
+sudo nala update
 
 # Core X11 libraries
 echo "Installing core X11 libraries..."
-sudo apt install -y \
+sudo nala install -y \
     libx11-6 \
     libx11-dev \
     libxext6 \
@@ -31,7 +31,7 @@ sudo apt install -y \
 
 # XKB (X Keyboard) libraries - essential for Alacritty
 echo "Installing XKB libraries..."
-sudo apt install -y \
+sudo nala install -y \
     libxkbcommon0 \
     libxkbcommon-x11-0 \
     libxkbcommon-dev \
@@ -39,7 +39,7 @@ sudo apt install -y \
 
 # XCB libraries (X protocol C-language Binding)
 echo "Installing XCB libraries..."
-sudo apt install -y \
+sudo nala install -y \
     libxcb1 \
     libxcb1-dev \
     libxcb-xfixes0-dev \
@@ -49,7 +49,7 @@ sudo apt install -y \
 
 # OpenGL/Mesa libraries
 echo "Installing OpenGL/Mesa libraries..."
-sudo apt install -y \
+sudo nala install -y \
     libgl1-mesa-dev \
     libgl1-mesa-glx \
     libglu1-mesa-dev \
@@ -58,7 +58,7 @@ sudo apt install -y \
 
 # FontConfig libraries (for font handling)
 echo "Installing FontConfig libraries..."
-sudo apt install -y \
+sudo nala install -y \
     libfontconfig1 \
     libfontconfig1-dev \
     libfreetype6 \
@@ -66,7 +66,7 @@ sudo apt install -y \
 
 # Additional useful libraries
 echo "Installing additional GUI libraries..."
-sudo apt install -y \
+sudo nala install -y \
     libgconf-2-4 \
     libgtk-3-0 \
     libgdk-pixbuf2.0-0 \

@@ -1,31 +1,34 @@
 #!/bin/bash
 
-# Check if Script is Run as Root
-if [[ $EUID -ne 0 ]]; then
-  echo "You must be a root user to run this script, please run sudo ./install.sh" 2>&1
+# Check if Script is Run as Regular User
+if [[ $EUID -eq 0 ]]; then
+  echo "This script should be run as a regular user, not root. Run without sudo." 2>&1
   exit 1
 fi
 
-username=$(id -u -n 1000)
-builddir=$(pwd)
+username=$(whoami)
 
-# Update packages list and update system
-apt update
-apt upgrade -y
+# System operations that need sudo
+sudo apt update
+sudo apt upgrade -y
 
-# Making .config and Moving config files and background to Pictures
-cd $builddir
-chown -R $username:$username /home/$username
+sudo chown -R $username:$username /home/$username
 
 # Installing Essential Programs 
-apt install nala unzip wget build-essential -y
+sudo nala install nala unzip wget build-essential -y
 
 curl -sSL https://raw.githubusercontent.com/Ujstor/wsl2-config/main/scripts/usenala.sh | bash
 
 # Installing Other less important Programs
-apt install psmisc vim gdu htop tldr git trash-cli autojump curl fzf bat python3-pip -y
+sudo nala install psmisc vim gdu htop tldr git trash-cli autojump curl fzf bat python3-pip -y
 
-sudo mv /usr/lib/python3.11/EXTERNALLY-MANAGED /usr/lib/python3.11/EXTERNALLY-MANAGED.old
+# Handle EXTERNALLY-MANAGED for any Python 3.x version
+for python_dir in /usr/lib/python3.*/; do
+    if [ -f "${python_dir}EXTERNALLY-MANAGED" ]; then
+        sudo mv "${python_dir}EXTERNALLY-MANAGED" "${python_dir}EXTERNALLY-MANAGED.old"
+        echo "Moved EXTERNALLY-MANAGED for $(basename $python_dir)"
+    fi
+done
 
 curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
 
@@ -39,8 +42,9 @@ pip install ansible
 curl -sSL https://raw.githubusercontent.com/Ujstor/wsl2-config/main/scripts/x11.sh | bash
 curl -sSL https://raw.githubusercontent.com/Ujstor/wsl2-config/main/scripts/tools.sh | bash
 
+# Install configs for current user
 curl -sSL https://raw.githubusercontent.com/Ujstor/mybash/main/setup.sh | bash
 curl -sSL https://raw.githubusercontent.com/Ujstor/tmux-config/master/install.sh | bash
 curl -sSL https://raw.githubusercontent.com/Ujstor/nvim-config/master/install.sh | bash
 
-source ~/.bashrc
+echo "Setup completed for user: $username"
