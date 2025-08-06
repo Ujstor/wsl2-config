@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Enhanced System Setup Script
-# Installs Brave Browser, GitHub CLI, Go tools, Python packages, npm packages, and Rust tools with proper error handling
+# Installs Brave Browser, GitHub CLI, Azure CLI, Go tools, Python packages, npm packages, and Rust tools with proper error handling
 set -euo pipefail  # Exit on error, undefined vars, pipe failures
 
 if [[ -f "$HOME/.bashrc" ]]; then
@@ -67,7 +67,7 @@ update_system() {
 # Install base dependencies
 install_base_deps() {
     log_info "Installing base dependencies..."
-    local deps="software-properties-common apt-transport-https curl ca-certificates build-essential"
+    local deps="software-properties-common apt-transport-https curl ca-certificates build-essential gnupg lsb-release"
     if ! sudo nala install $deps -y; then
         error_exit "Failed to install base dependencies"
     fi
@@ -77,6 +77,7 @@ install_base_deps() {
 # Install Brave Browser
 install_brave() {
     log_info "Installing Brave Browser..."
+
     # Download and add GPG key
     if ! wget -qO- https://brave-browser-apt-release.s3.brave.com/brave-browser-archive-keyring.gpg | \
          sudo gpg --dearmor | \
@@ -94,12 +95,14 @@ install_brave() {
     if ! sudo nala update || ! sudo nala install brave-browser -y; then
         error_exit "Failed to install Brave Browser"
     fi
+
     log_success "Brave Browser installed"
 }
 
 # Install GitHub CLI
 install_github_cli() {
     log_info "Installing GitHub CLI..."
+
     # Ensure curl is available
     if ! command -v curl &> /dev/null; then
         log_info "Installing curl..."
@@ -123,12 +126,73 @@ install_github_cli() {
     if ! sudo nala update || ! sudo nala install gh -y; then
         error_exit "Failed to install GitHub CLI"
     fi
+
     log_success "GitHub CLI installed"
+}
+
+# Install Azure CLI
+install_azure_cli() {
+    log_info "Installing Azure CLI..."
+
+    # Check if azure-cli is already installed from universe repository (outdated version)
+    if dpkg -l | grep -q "azure-cli.*2\.0\.81"; then
+        log_warning "Found outdated Azure CLI package (2.0.81) from universe repository. Removing it..."
+        if ! sudo apt remove azure-cli -y && sudo apt autoremove -y; then
+            log_error "Failed to remove outdated Azure CLI package"
+        else
+            log_success "Outdated Azure CLI package removed"
+        fi
+    fi
+
+    # Install packages needed for the installation process
+    local deps="apt-transport-https ca-certificates curl gnupg lsb-release"
+    if ! sudo nala install $deps -y; then
+        error_exit "Failed to install Azure CLI dependencies"
+    fi
+
+    # Create keyrings directory if it doesn't exist
+    sudo mkdir -p /etc/apt/keyrings
+
+    # Download and install the Microsoft signing key
+    if ! curl -sLS https://packages.microsoft.com/keys/microsoft.asc | \
+         gpg --dearmor | \
+         sudo tee /etc/apt/keyrings/microsoft.gpg > /dev/null; then
+        error_exit "Failed to add Microsoft GPG key"
+    fi
+
+    sudo chmod go+r /etc/apt/keyrings/microsoft.gpg
+
+    # Add the Azure CLI software repository
+    local az_dist
+    az_dist=$(lsb_release -cs)
+    local repo_content="Types: deb
+URIs: https://packages.microsoft.com/repos/azure-cli/
+Suites: ${az_dist}
+Components: main
+Architectures: $(dpkg --print-architecture)
+Signed-by: /etc/apt/keyrings/microsoft.gpg"
+
+    if ! echo "$repo_content" | sudo tee /etc/apt/sources.list.d/azure-cli.sources > /dev/null; then
+        error_exit "Failed to add Azure CLI repository"
+    fi
+
+    # Update repository information and install the azure-cli package
+    if ! sudo nala update || ! sudo nala install azure-cli -y; then
+        error_exit "Failed to install Azure CLI"
+    fi
+
+    log_success "Azure CLI installed successfully"
+
+    # Display version information
+    local az_version
+    az_version=$(az version --output json 2>/dev/null | grep '"azure-cli":' | cut -d'"' -f4 || echo "unknown")
+    log_info "Azure CLI version: $az_version"
 }
 
 # Check and validate Rust installation
 check_rust() {
     log_info "Checking Rust installation..."
+
     # Source cargo environment if it exists
     if [[ -f "$HOME/.cargo/env" ]]; then
         source "$HOME/.cargo/env"
@@ -208,6 +272,7 @@ install_cargo_packages() {
 # Check and validate Go installation
 check_go() {
     log_info "Checking Go installation..."
+    
     # Check if go is available in PATH for current user
     if command -v go &> /dev/null; then
         local go_version
@@ -226,10 +291,12 @@ check_go() {
 # Install Go tools
 install_go_tools() {
     log_info "Installing Go tools..."
+
     local tools=(
         "github.com/hetznercloud/cli/cmd/hcloud@latest"
         "github.com/dundee/gdu@latest"
         "github.com/melkeydev/go-blueprint@latest"
+        "https://github.com/Ujstor/wsl2-config.git"
     )
 
     for tool in "${tools[@]}"; do
@@ -247,6 +314,7 @@ install_go_tools() {
 # Check and validate Python/pip installation
 check_python() {
     log_info "Checking Python and pip installation..."
+
     if ! command -v python3 &> /dev/null; then
         log_error "Python3 is not installed"
         return 1
@@ -269,6 +337,7 @@ check_python() {
 # Install Python packages with pip
 install_pip_packages() {
     log_info "Installing Python packages with pip..."
+
     local packages=(
         "ansible"
     )
@@ -298,6 +367,7 @@ install_pip_packages() {
 # Check and validate Node.js/npm installation
 check_nodejs() {
     log_info "Checking Node.js and npm installation..."
+
     if ! command -v node &> /dev/null; then
         log_error "Node.js is not installed"
         return 1
@@ -320,6 +390,7 @@ check_nodejs() {
 # Install npm packages globally
 install_npm_packages() {
     log_info "Installing npm packages globally..."
+
     local packages=(
         "@anthropic-ai/claude-code"
     )
@@ -362,6 +433,7 @@ show_summary() {
     # Check installed software
     command -v brave-browser &> /dev/null && echo -e "${GREEN}✓${NC} Brave Browser" || echo -e "${RED}✗${NC} Brave Browser"
     command -v gh &> /dev/null && echo -e "${GREEN}✓${NC} GitHub CLI" || echo -e "${RED}✗${NC} GitHub CLI"
+    command -v az &> /dev/null && echo -e "${GREEN}✓${NC} Azure CLI" || echo -e "${RED}✗${NC} Azure CLI"
 
     # Check Rust/Cargo
     if [[ -f "$HOME/.cargo/env" ]]; then
@@ -409,17 +481,29 @@ show_summary() {
     fi
 
     echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+
+    # Display post-installation notes
+    if command -v az &> /dev/null; then
+        echo ""
+        log_info "Azure CLI Post-Installation Notes:"
+        echo "  • Sign in with: az login"
+        echo "  • Update with: az upgrade"
+        echo "  • Check version: az version"
+        echo "  • Get help: az --help"
+    fi
 }
 
 # Main execution
 main() {
     log_info "Starting system setup..."
+
     check_root
     check_sudo
     update_system
     install_base_deps
     install_brave
     install_github_cli
+    install_azure_cli
 
     # Handle Rust installation
     if ! check_rust; then
