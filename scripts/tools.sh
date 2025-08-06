@@ -272,7 +272,7 @@ install_cargo_packages() {
 # Check and validate Go installation
 check_go() {
     log_info "Checking Go installation..."
-    
+
     # Check if go is available in PATH for current user
     if command -v go &> /dev/null; then
         local go_version
@@ -296,7 +296,8 @@ install_go_tools() {
         "github.com/hetznercloud/cli/cmd/hcloud@latest"
         "github.com/dundee/gdu@latest"
         "github.com/melkeydev/go-blueprint@latest"
-        "https://github.com/Ujstor/wsl2-config.git"
+        "github.com/norwoodj/helm-docs/cmd/helm-docs@latest"
+        "github.com/Azure/kubelogin@latest"
     )
 
     for tool in "${tools[@]}"; do
